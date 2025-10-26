@@ -1,111 +1,49 @@
-"""Endpoints relacionados con peliculas."""
-
-from __future__ import annotations
-
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, request, jsonify
+from src.extensions import db
+from src.models.movie import Movie
 
 bp = Blueprint("movies", __name__, url_prefix="/movies")
 
-
-class MovieService:
-    """Orquesta la logica de negocio para el recurso Movie."""
-
-    # TODO: inyectar dependencias necesarias (db.session, modelos, esquemas, etc.).
-
-    def list_movies(self) -> list[dict]:
-        """Retorna todas las peliculas registradas."""
-        # TODO: consultar la base de datos y serializar a una lista de dicts.
-        pass
-
-    def create_movie(self, payload: dict) -> dict:
-        """Crea una nueva pelicula."""
-        # TODO: validar el payload y persistir un nuevo registro Movie.
-        pass
-
-    def get_movie(self, movie_id: int) -> dict:
-        """Obtiene una pelicula por su identificador."""
-        # TODO: buscar la pelicula y manejar el caso de no encontrada.
-        pass
-
-    def update_movie(self, movie_id: int, payload: dict) -> dict:
-        """Actualiza los datos de una pelicula."""
-        # TODO: aplicar cambios permitidos y guardar en la base de datos.
-        pass
-
-    def delete_movie(self, movie_id: int) -> None:
-        """Elimina una pelicula existente."""
-        # TODO: definir si el borrado debe ser logico o fisico.
-        pass
-
-
-service = MovieService()
-
-
-@bp.get("/")
+#
+# LISTAR TODAS LAS PELÍCULAS
+#
+@bp.route("/", methods=["GET"])
 def list_movies():
-    """Lista todas las peliculas disponibles."""
-    # TODO: invocar service.list_movies y devolver la respuesta serializada.
-    return jsonify({"detail": "TODO: implementar listado de peliculas"}), 501
+    movies = Movie.query.order_by(Movie.created_at.desc()).all()
+    return jsonify([m.to_dict() for m in movies]), 200
 
 
-@bp.post("/")
+#
+# CREAR UNA PELÍCULA
+#
+@bp.route("/", methods=["POST"])
 def create_movie():
-    """Crea una pelicula a partir de los datos enviados."""
-    payload = request.get_json(silent=True) or {}
-    # TODO: validar payload, manejar errores y devolver el recurso creado.
-    return (
-        jsonify(
-            {
-                "detail": "TODO: implementar creacion de pelicula",
-                "payload_example": payload,
-            }
-        ),
-        501,
+    data = request.get_json() or {}
+
+    title = data.get("title")
+    if not title:
+        return jsonify({"detail": "Campo 'title' es obligatorio."}), 400
+
+    movie = Movie(
+        title=title,
+        genre=data.get("genre"),
+        release_year=data.get("release_year"),
     )
 
+    db.session.add(movie)
+    db.session.commit()
+    db.session.refresh(movie)
 
-@bp.get("/<int:movie_id>")
+    return jsonify(movie.to_dict()), 201
+
+
+#
+# OBTENER DETALLE DE UNA PELÍCULA POR ID
+#
+@bp.route("/<int:movie_id>", methods=["GET"])
 def retrieve_movie(movie_id: int):
-    """Devuelve el detalle de una pelicula concreta."""
-    # TODO: invocar service.get_movie y manejar 404 cuando corresponda.
-    return (
-        jsonify(
-            {
-                "detail": "TODO: implementar recuperacion de pelicula",
-                "movie_id": movie_id,
-            }
-        ),
-        501,
-    )
+    movie = Movie.query.get(movie_id)
+    if not movie:
+        return jsonify({"detail": f"Movie {movie_id} not found"}), 404
 
-
-@bp.put("/<int:movie_id>")
-def update_movie(movie_id: int):
-    """Actualiza la informacion de una pelicula."""
-    payload = request.get_json(silent=True) or {}
-    # TODO: invocar service.update_movie y devolver el recurso actualizado.
-    return (
-        jsonify(
-            {
-                "detail": "TODO: implementar actualizacion de pelicula",
-                "movie_id": movie_id,
-                "payload_example": payload,
-            }
-        ),
-        501,
-    )
-
-
-@bp.delete("/<int:movie_id>")
-def delete_movie(movie_id: int):
-    """Elimina una pelicula del catalogo."""
-    # TODO: invocar service.delete_movie y devolver 204 al completar.
-    return (
-        jsonify(
-            {
-                "detail": "TODO: implementar borrado de pelicula",
-                "movie_id": movie_id,
-            }
-        ),
-        501,
-    )
+    return jsonify(movie.to_dict()), 200

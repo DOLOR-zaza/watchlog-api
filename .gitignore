@@ -1,22 +1,39 @@
+# --- Entorno virtual local ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Archivos compilados / caché Python ---
 __pycache__/
 *.pyc
-.venv/
-env/
-*.db
-*.sqlite3
-*.sqlite
-.pytest_cache/
-.coverage
-htmlcov/
-coverage.xml
-.DS_Store
-.env
-.flaskenv
-.vscode/
-.idea/
-instance/
+*.pyo
+*.pyd
+*.pytest_cache/
+*.egg-info/
 dist/
 build/
-*.egg-info/
 *.log
-venv/
+
+# --- Archivos/dirs de coverage y pruebas ---
+.coverage
+coverage.xml
+htmlcov/
+
+# --- Archivos temporales SQLite ---
+*.db-journal
+*.sqlite3-journal
+
+# --- Archivos / settings locales ---
+.env
+.flaskenv
+.DS_Store
+.vscode/
+.idea/
+
+# --- Alembic/pycache de migraciones ---
+migrations/__pycache__/
+
+# IMPORTANTE:
+# No ignoramos 'instance/' porque queremos subir instance/app.db al repo para que el profe solo clone y corra.
+

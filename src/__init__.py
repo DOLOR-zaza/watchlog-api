@@ -1,31 +1,37 @@
-"""Configuracion general de la aplicacion Flask."""
+"""Application Factory principal de WatchLog API."""
 
+import os
 from flask import Flask
-from flask_cors import CORS
-from .config import DevelopmentConfig
-from .extensions import db, migrate
+from src.config import config_by_name
+from src.extensions import db, migrate
+from src.api import register_api_blueprints
 
 
-def create_app(config_object: type[DevelopmentConfig] = DevelopmentConfig) -> Flask:
-    """Crea y configura la aplicacion utilizando application factory."""
+def create_app() -> Flask:
+    """
+    Construye y regresa la instancia de la app Flask.
+    Esta función la usan:
+    - flask run en local (app.py)
+    - flask db (migraciones)
+    - gunicorn en Render (wsgi.py)
+    """
+
     app = Flask(__name__)
-    app.config.from_object(config_object)
 
-    register_extensions(app)
-    register_blueprints(app)
-    CORS(app)
+    # 1. Cargar configuración según variable FLASK_ENV
+    #    development (local), production (Render)
+    env_name = os.getenv("FLASK_ENV", "development")
+    app.config.from_object(config_by_name[env_name])
+
+    # 2. Inicializar extensiones compartidas
+    db.init_app(app)
+    migrate.init_app(app, db)
+
+    # 3. Registrar blueprints (/movies, /series, /progress, /health...)
+    register_api_blueprints(app)
 
     return app
 
 
-def register_extensions(app: Flask) -> None:
-    """Inicializa extensiones de terceros."""
-    db.init_app(app)
-    migrate.init_app(app, db)
+__all__ = ["create_app"]
 
-
-def register_blueprints(app: Flask) -> None:
-    """Registra los blueprints del proyecto."""
-    from .api import register_api_blueprints
-
-    register_api_blueprints(app)

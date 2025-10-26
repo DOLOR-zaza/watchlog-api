@@ -1,37 +1,39 @@
-"""Modelo para series disponibles en el catalogo."""
-
-from __future__ import annotations
-
 from datetime import datetime
-
 from src.extensions import db
 
 
 class Series(db.Model):
-    """Representa una serie cargada por los usuarios."""
-
     __tablename__ = "series"
 
-    # TODO: definir columnas (id, title, total_seasons, created_at, updated_at).
-    # TODO: agregar columnas opcionales (synopsis, genres, image_url) si se desean.
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    total_seasons = db.Column(db.Integer, default=0)
 
-    # TODO: configurar relacion con Season (one-to-many) y WatchEntry.
-    # seasons = db.relationship("Season", back_populates="series", lazy="joined")
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
 
-    def __repr__(self) -> str:
-        """Devuelve una representacion legible del modelo."""
-        return f"<Series id={getattr(self, 'id', None)} title={getattr(self, 'title', None)}>"
+    # Relación 1:N con Season
+    seasons = db.relationship(
+        "Season",
+        back_populates="series",
+        cascade="all, delete-orphan",
+        lazy="dynamic",
+    )
 
     def to_dict(self, include_seasons: bool = False) -> dict:
-        """Serializa la serie y opcionalmente sus temporadas."""
-        # TODO: reemplazar por serializacion real usando marshmallow o similar.
         data = {
-            "id": getattr(self, "id", None),
-            "title": getattr(self, "title", None),
-            "total_seasons": getattr(self, "total_seasons", None),
-            "created_at": getattr(self, "created_at", datetime.utcnow()),
+            "id": self.id,
+            "title": self.title,
+            "total_seasons": self.total_seasons,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
         }
+
         if include_seasons:
-            # TODO: serializar temporadas reales en lugar de lista vacia.
-            data["seasons"] = []
+            data["seasons"] = [
+                season.to_dict() for season in self.seasons.all()
+            ]
+
         return data

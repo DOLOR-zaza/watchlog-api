@@ -1,10 +1,13 @@
-"""Coleccion de modelos disponibles en la aplicacion."""
+from .user import User
+from .movie import Movie
+from .series import Series
+from .seasons import Season
+from .watch_entry import WatchEntry
 
-# TODO: exponer nuevos modelos cuando se creen.
-from .movie import Movie  # noqa: F401
-from .seasons import Season  # noqa: F401
-from .series import Series  # noqa: F401
-from .user import User  # noqa: F401
-from .watch_entry import WatchEntry  # noqa: F401
-
-__all__ = ["Movie", "Season", "Series", "User", "WatchEntry"]
+__all__ = [
+    "User",
+    "Movie",
+    "Series",
+    "Season",
+    "WatchEntry",
+]

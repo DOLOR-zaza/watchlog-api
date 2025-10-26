@@ -1,133 +1,73 @@
-"""Endpoints relacionados con series y temporadas."""
-
-from __future__ import annotations
-
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, request, jsonify
+from src.api.services import SeriesService
 
 bp = Blueprint("series", __name__, url_prefix="/series")
 
 
-class SeriesService:
-    """Gestiona las operaciones CRUD sobre Series y Seasons."""
-
-    # TODO: inyectar modelos Series y Season junto a la sesion de base de datos.
-
-    def list_series(self) -> list[dict]:
-        """Retorna la lista de series disponibles."""
-        # TODO: consultar las series existentes y devolverlas serializadas.
-        pass
-
-    def create_series(self, payload: dict) -> dict:
-        """Crea una nueva serie."""
-        # TODO: validar payload (titulo, temporadas, etc.) y persistir la serie.
-        pass
-
-    def get_series(self, series_id: int) -> dict:
-        """Obtiene una serie y sus temporadas asociadas."""
-        # TODO: recuperar el registro y manejar la ausencia del recurso.
-        pass
-
-    def update_series(self, series_id: int, payload: dict) -> dict:
-        """Actualiza los campos permitidos de una serie."""
-        # TODO: definir que campos son editables e implementar la actualizacion.
-        pass
-
-    def delete_series(self, series_id: int) -> None:
-        """Elimina una serie del catalogo."""
-        # TODO: decidir estrategia de borrado e implementarla.
-        pass
-
-    def add_season(self, series_id: int, payload: dict) -> dict:
-        """Agrega una temporada a una serie existente."""
-        # TODO: validar numero de temporada y cantidad de episodios.
-        pass
-
-
-service = SeriesService()
-
-
-@bp.get("/")
+@bp.route("/", methods=["GET"])
 def list_series():
-    """Devuelve todas las series registradas."""
-    # TODO: invocar service.list_series y devolver respuesta paginada si aplica.
-    return jsonify({"detail": "TODO: implementar listado de series"}), 501
+    """
+    Lista todas las series registradas.
+    No incluye las seasons dentro (para que la lista sea más liviana).
+    """
+    all_series = SeriesService.list_all()
+    payload = [s.to_dict(include_seasons=False) for s in all_series]
+    return jsonify(payload), 200
 
 
-@bp.post("/")
+@bp.route("/", methods=["POST"])
 def create_series():
-    """Crea una nueva serie."""
-    payload = request.get_json(silent=True) or {}
-    # TODO: usar service.create_series y devolver 201 con la nueva serie.
-    return (
-        jsonify(
-            {
-                "detail": "TODO: implementar creacion de serie",
-                "payload_example": payload,
-            }
-        ),
-        501,
-    )
+    """
+    Crea una nueva serie.
+    Body esperado (JSON):
+    {
+      "title": "Avatar",
+      "total_seasons": 1   # opcional
+    }
+    """
+    try:
+        data = request.get_json() or {}
+        new_series = SeriesService.create(data)
+
+        return jsonify(new_series.to_dict(include_seasons=False)), 201
+
+    except ValueError as e:
+        # Ej: falta "title"
+        return jsonify({"detail": str(e)}), 400
 
 
-@bp.get("/<int:series_id>")
-def retrieve_series(series_id: int):
-    """Devuelve los detalles de una serie."""
-    # TODO: invocar service.get_series y construir respuesta con temporadas.
-    return (
-        jsonify(
-            {
-                "detail": "TODO: implementar recuperacion de serie",
-                "series_id": series_id,
-            }
-        ),
-        501,
-    )
-
-
-@bp.put("/<int:series_id>")
-def update_series(series_id: int):
-    """Actualiza la informacion de una serie."""
-    payload = request.get_json(silent=True) or {}
-    # TODO: invocar service.update_series y devolver la serie actualizada.
-    return (
-        jsonify(
-            {
-                "detail": "TODO: implementar actualizacion de serie",
-                "series_id": series_id,
-                "payload_example": payload,
-            }
-        ),
-        501,
-    )
-
-
-@bp.delete("/<int:series_id>")
-def delete_series(series_id: int):
-    """Elimina una serie del catalogo."""
-    # TODO: invocar service.delete_series y devolver 204.
-    return (
-        jsonify(
-            {
-                "detail": "TODO: implementar borrado de serie",
-                "series_id": series_id,
-            }
-        ),
-        501,
-    )
-
-
-@bp.post("/<int:series_id>/seasons")
+@bp.route("/<int:series_id>/seasons", methods=["POST"])
 def add_season(series_id: int):
-    """Agrega una temporada a una serie existente."""
-    payload = request.get_json(silent=True) or {}
-    # TODO: invocar service.add_season y devolver la temporada creada.
-    return (
-        jsonify(
-            {
-                "detail": "TODO: implementar creacion de temporada",
-                "series_id": series_id,
-                "payload_example": payload,
-            }
-        ),
-        501,
-    )
+    """
+    Agrega una temporada nueva a la serie indicada.
+    Body esperado (JSON):
+    {
+      "number": 1,
+      "episodes_count": 12
+    }
+
+    Devuelve la serie actualizada, con sus seasons.
+    """
+    try:
+        data = request.get_json() or {}
+        _season = SeriesService.add_season(series_id, data)
+
+        updated_series = SeriesService.get_by_id(series_id)
+        return jsonify(updated_series.to_dict(include_seasons=True)), 201
+
+    except LookupError as e:
+        # La serie no existe
+        return jsonify({"detail": str(e)}), 404
+
+    except ValueError as e:
+        # Ej: falta "number"
+        return jsonify({"detail": str(e)}), 400
+
+@bp.route("/<int:series_id>", methods=["GET"])
+def get_series(series_id: int):
+    from src.models.series import Series
+    series = Series.query.get(series_id)
+    if not series:
+        return jsonify({"detail": f"Series {series_id} not found"}), 404
+    # aquí sí queremos seasons incluidas
+    return jsonify(series.to_dict(include_seasons=True)), 200

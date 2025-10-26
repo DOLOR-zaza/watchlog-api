@@ -1,37 +1,37 @@
-"""Modelo principal para las peliculas."""
-
-from __future__ import annotations
-
 from datetime import datetime
-
 from src.extensions import db
 
 
 class Movie(db.Model):
-    """Representa una pelicula dentro del catalogo."""
+    """
+    Representa una película individual que un usuario puede agregar a su watchlist.
+    """
 
     __tablename__ = "movies"
 
-    # TODO: definir columnas (id, title, genre, release_year, created_at, updated_at).
-    # Ejemplo:
-    # id = db.Column(db.Integer, primary_key=True)
-    # title = db.Column(db.String(120), nullable=False)
-    # ...
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    genre = db.Column(db.String(120))
+    release_year = db.Column(db.Integer)
 
-    # TODO: crear relacion con WatchEntry (one-to-many) si aplica.
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
+
+    # (OJO) quitamos watch_entries porque todavía no tenemos ForeignKey directa
+    # watch_entries = db.relationship("WatchEntry", back_populates="movie", lazy="dynamic")
 
     def __repr__(self) -> str:
-        """Devuelve una representacion legible del modelo."""
-        # TODO: ajustar los campos utilizados en la representacion.
-        return f"<Movie id={getattr(self, 'id', None)} title={getattr(self, 'title', None)}>"
+        return f"<Movie id={self.id} title={self.title!r}>"
 
     def to_dict(self) -> dict:
-        """Serializa la instancia para respuestas JSON."""
-        # TODO: reemplazar esta implementacion temporal por serializacion real.
+        """Serializa la película para respuestas JSON."""
         return {
-            "id": getattr(self, "id", None),
-            "title": getattr(self, "title", None),
-            "genre": getattr(self, "genre", None),
-            "release_year": getattr(self, "release_year", None),
-            "created_at": getattr(self, "created_at", datetime.utcnow()),
+            "id": self.id,
+            "title": self.title,
+            "genre": self.genre,
+            "release_year": self.release_year,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
         }

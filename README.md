@@ -1,9 +1,13 @@
+# > Nota: Este repo es mi entrega final de WatchLog. La API ya está implementada (modelos, migraciones, services y endpoints funcionando). El README debajo es la guía original del proyecto.
+
 # WatchLog API - Proyecto Base (Flask Intermedio)
 
 ## Descripcion
+
 WatchLog es un ejercicio de nivel intermedio con Flask inspirado en plataformas como Goodreads o MyAnimeList. El objetivo es que los alumnos creen una API REST para registrar peliculas y series, gestionar una watchlist y calcular el avance de cada usuario. Este repositorio contiene la base del proyecto: el esqueleto de configuracion, modelos y blueprints listos para completar.
 
 ## Objetivos de aprendizaje
+
 - Practicar la arquitectura application factory de Flask.
 - Utilizar SQLAlchemy y Flask-Migrate para modelar la base de datos y aplicar migraciones.
 - Implementar operaciones CRUD y relaciones entre modelos.
@@ -12,6 +16,7 @@ WatchLog es un ejercicio de nivel intermedio con Flask inspirado en plataformas 
 - Diseñar respuestas consistentes (JSON) y manejar errores comunes.
 
 ## Estructura del proyecto
+
 ```
 watchlog-api/
 |-- app.py
@@ -38,6 +43,7 @@ watchlog-api/
 Cada archivo contiene clases, metodos y funciones con `TODO` listos para completar. La idea es que los alumnos rellenen las piezas que faltan siguiendo las pistas indicadas.
 
 ## Flujo recomendado para los alumnos
+
 1. **Configurar el entorno**: crear un entorno virtual, instalar dependencias y revisar las configuraciones en `src/config.py`.
 2. **Diseñar la base de datos**: completar los modelos en `src/models/` y generar migraciones con Flask-Migrate.
 3. **Completar la capa de servicios**: implementar la logica en las clases `MovieService`, `SeriesService` y `ProgressService`.
@@ -46,6 +52,7 @@ Cada archivo contiene clases, metodos y funciones con `TODO` listos para complet
 6. **Validar y documentar**: probar los endpoints con Postman o Thunder Client y dejar evidencia de las pruebas.
 
 ## Configuracion rapida
+
 ```bash
 git clone <url-del-repo>
 cd watchlog-api
@@ -63,6 +70,7 @@ flask run
 ```
 
 Variables de entorno sugeridas (archivo `.env`):
+
 ```
 FLASK_APP=app.py
 FLASK_ENV=development
@@ -70,22 +78,24 @@ SQLALCHEMY_DATABASE_URI=sqlite:///instance/app.db
 ```
 
 ## Blueprints y endpoints previstos
-| Blueprint | Endpoint | Metodo | Descripcion |
-|-----------|----------|--------|-------------|
-| health    | `/health/` | GET | Verifica el estado de la API. |
-| movies    | `/movies/` | GET, POST | Listado y creacion de peliculas. |
-| movies    | `/movies/<id>` | GET, PUT, DELETE | Operaciones sobre una pelicula. |
-| series    | `/series/` | GET, POST | Listado y creacion de series. |
-| series    | `/series/<id>` | GET, PUT, DELETE | Operaciones sobre una serie. |
-| series    | `/series/<id>/seasons` | POST | Alta de temporadas para una serie. |
-| progress  | `/watchlist/movies/<movie_id>` | POST | Agrega una pelicula a la watchlist. |
-| progress  | `/watchlist/series/<series_id>` | POST | Agrega una serie a la watchlist. |
-| progress  | `/progress/series/<series_id>` | PATCH | Actualiza el avance de una serie. |
-| progress  | `/me/watchlist` | GET | Lista la watchlist del usuario. |
+
+| Blueprint | Endpoint                        | Metodo           | Descripcion                         |
+| --------- | ------------------------------- | ---------------- | ----------------------------------- |
+| health    | `/health/`                      | GET              | Verifica el estado de la API.       |
+| movies    | `/movies/`                      | GET, POST        | Listado y creacion de peliculas.    |
+| movies    | `/movies/<id>`                  | GET, PUT, DELETE | Operaciones sobre una pelicula.     |
+| series    | `/series/`                      | GET, POST        | Listado y creacion de series.       |
+| series    | `/series/<id>`                  | GET, PUT, DELETE | Operaciones sobre una serie.        |
+| series    | `/series/<id>/seasons`          | POST             | Alta de temporadas para una serie.  |
+| progress  | `/watchlist/movies/<movie_id>`  | POST             | Agrega una pelicula a la watchlist. |
+| progress  | `/watchlist/series/<series_id>` | POST             | Agrega una serie a la watchlist.    |
+| progress  | `/progress/series/<series_id>`  | PATCH            | Actualiza el avance de una serie.   |
+| progress  | `/me/watchlist`                 | GET              | Lista la watchlist del usuario.     |
 
 > Nota: Los endpoints retornan respuestas `501 Not Implemented` hasta que se complete la logica.
 
 ## TODO principal por archivo
+
 - `src/api/health.py`: reemplazar el check basico por validaciones reales (BD, cache, servicios externos).
 - `src/api/movies.py`: implementar `MovieService` y conectar los endpoints con los modelos.
 - `src/api/series.py`: manejar relacion serie-temporadas y exponer datos normalizados.
@@ -97,27 +107,32 @@ SQLALCHEMY_DATABASE_URI=sqlite:///instance/app.db
 - `src/models/watch_entry.py`: manejar llaves foraneas, estado (`status`), calculo `percentage_watched` y metodos helpers.
 
 ## Calculo de avance sugerido
+
 ```python
 percentage = (watched_episodes / total_episodes) * 100 if total_episodes else 0
 ```
+
 - Limitar `watched_episodes` a un maximo de `total_episodes`.
 - Retornar `0` cuando no existan episodios vistos.
 - Retornar `100` cuando el contenido este marcado como completado.
 
 ## Evaluacion sugerida
-| Criterio | Peso |
-|----------|------|
-| CRUDs funcionales y migraciones correctas | 40% |
-| Calculo de progreso y consistencia de datos | 25% |
-| Validaciones y manejo de errores | 20% |
-| Codigo limpio, documentacion y buenas practicas | 15% |
+
+| Criterio                                        | Peso |
+| ----------------------------------------------- | ---- |
+| CRUDs funcionales y migraciones correctas       | 40%  |
+| Calculo de progreso y consistencia de datos     | 25%  |
+| Validaciones y manejo de errores                | 20%  |
+| Codigo limpio, documentacion y buenas practicas | 15%  |
 
 ## Consejos finales
+
 - Implementar primero los modelos.
 - Reutilizar logica de servicios en las rutas para mantener una sola fuente de verdad.
 - Usar `flask shell` para explorar los modelos mientras se desarrolla.
 
 ## Diagrama de clases (Mermaid)
+
 ```mermaid
 classDiagram
     class User {
@@ -167,5 +182,7 @@ classDiagram
     WatchEntry "*" --> "0..1" Series : contenido
     Series "1" --> "*" Season : seasons
 ```
+
 # Recursos
+
 https://es.wikipedia.org/wiki/WSGI
